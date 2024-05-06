@@ -226,7 +226,7 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
             cameraView.showPoints([])
             return
         }
-
+        
         // Ignore low confidence points.
         let confidenceThreshold: Float = 0.3
         guard thumbTipPoint.confidence > confidenceThreshold &&
