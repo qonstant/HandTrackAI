@@ -10,12 +10,21 @@ import AVFoundation
 import Vision
 
 class CameraViewController: UIViewController {
-
-    private var cameraView: CameraView { view as! CameraView }
     
+    private var cameraView: CameraView { view as! CameraView }
+    private let sessionQueue = DispatchQueue(label: "CameraSessionQueue")
     private let videoDataOutputQueue = DispatchQueue(label: "CameraFeedDataOutput", qos: .userInteractive)
     private var cameraFeedSession: AVCaptureSession?
     private var handPoseRequest = VNDetectHumanHandPoseRequest()
+    private var currentCameraPosition: AVCaptureDevice.Position = .front
+
+    
+//    override func viewDidLoad() {
+//        super.viewDidLoad()
+//        
+//        // This sample app detects one hand only.
+//        handPoseRequest.maximumHandCount = 1
+//    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,6 +32,7 @@ class CameraViewController: UIViewController {
         // This sample app detects one hand only.
         handPoseRequest.maximumHandCount = 1
     }
+
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -91,6 +101,59 @@ class CameraViewController: UIViewController {
 
         cameraView.showPoints(pointsConverted)
     }
+    
+    // Function to flip the camera
+    public func flipCamera(completion: @escaping (Error?) -> Void) {
+        sessionQueue.async {
+            do {
+                // Toggle camera position
+                self.currentCameraPosition = self.currentCameraPosition == .back ? .front : .back
+                
+                // Begin session configuration
+                guard let cameraFeedSession = self.cameraFeedSession else {
+                    throw AppError.captureSessionSetup(reason: "Camera feed session is nil.")
+                }
+                cameraFeedSession.beginConfiguration()
+                
+                // Remove existing inputs
+                for input in cameraFeedSession.inputs {
+                    cameraFeedSession.removeInput(input)
+                }
+                
+                // Add new input for the selected camera
+                guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: self.currentCameraPosition) else {
+                    throw AppError.captureSessionSetup(reason: "Could not find \(self.currentCameraPosition) facing camera.")
+                }
+                let deviceInput = try AVCaptureDeviceInput(device: videoDevice)
+                guard cameraFeedSession.canAddInput(deviceInput) else {
+                    throw AppError.captureSessionSetup(reason: "Could not add video device input to the session.")
+                }
+                cameraFeedSession.addInput(deviceInput)
+                
+                // Commit session configuration
+                cameraFeedSession.commitConfiguration()
+                
+                // Notify completion on main thread
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
+            } catch {
+                // Notify error on main thread
+                DispatchQueue.main.async {
+                    completion(error)
+                }
+            }
+        }
+    }
+
+    
+    @IBAction func onCameraButtonTapped(_ sender: Any) {
+        flipCamera { error in
+                if let error = error {
+                    print("Failed to flip camera with error \(error)")
+                }
+        }
+    }
 }
 
 extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -123,7 +186,8 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
             // Perform VNDetectHumanHandPoseRequest
             try handler.perform([handPoseRequest])
             let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-            print("Time: \(timeElapsed) s. FPS: \(1/timeElapsed)")
+//            print("Time: \(timeElapsed) s. FPS: \(1/timeElapsed)")
+            
             // Continue only when a hand was detected in the frame.
             // Since we set the maximumHandCount property of the request to 1, there will be at most one observation.
             guard let observation = handPoseRequest.results?.first else {
