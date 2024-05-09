@@ -8,7 +8,7 @@ This application was created using Swift(UIKit).
 1. Clone the repository:
    ```sh
    git clone https://github.com/qonstant/HandTrackAI.git
-2. Go to the "/HandTrackAI" folder and run "HandTrackAI.xcodeproj" **ON YOUR IPHONE**, since it requires camera and you cant test it on simulator:
+2. Go to the "/HandTrackAI" folder and run "HandTrackAI.xcodeproj" **ON YOUR IPHONE**, since it requires camera and you can't test it on simulator:
 
 ### Introduction:
 
