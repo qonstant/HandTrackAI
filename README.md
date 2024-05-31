@@ -20,7 +20,7 @@ VNDetectHumanHandPose is an iOS feature that uses the Vision framework to detect
 
 <img width="1470" alt="Hand Pose " src="https://github.com/qonstant/HandTrackAI/assets/98641240/667dc7d9-22ef-4503-a070-5d353c10df5a">
 
-### Hose to use this App?
+### How to use this App?
 
 The app consists of two sections: one for AR Painting and the other for Finger Tracking.
 
